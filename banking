@@ -1,0 +1,69 @@
+package threads;
+
+public class Main8 {
+    public static int balance=0;
+    synchronized public  void withdraw(int amount) {
+        if (balance <= 0) {
+            System.out.println("waiting for the amount to be updated:" + amount);
+            try {
+                wait();
+            } catch (Exception r) {
+                System.out.println("withdrawal interuppted");
+            return;
+            }
+        }
+        if ((balance-amount) < 0) {
+            System.out.println("balance is too low for withdrawal:"+balance);
+            return;}    balance = balance - amount;
+            System.out.println("the current balance is :" + balance);
+
+    }
+    synchronized public boolean deposit(int amount) {
+        if (amount > 0) {
+            System.out.println("the amount is being deposited:" + amount);
+            balance = balance + amount;
+            notify();
+            return true;
+        }else {
+            System.out.println("invalid amount");
+            return false;
+        }
+
+    }
+
+    public static void main(String[] args) {
+        Main8 ma = new Main8();
+        Thread thread1 =new Thread(new Runnable() {
+            //    Main7 ma = new Main7();
+            @Override
+            public void run() {
+                try {
+                    ma. withdraw(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread1.setName("thread1");
+        thread1.start();
+
+        Thread thread2 =new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(400);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if(ma.deposit(500)){
+                    System.out.println("transaction completed");
+                }else{
+                    thread1.interrupt();
+                }
+            }
+        });
+        thread2.setName("thread2");
+        thread2.start();
+    }
+}
